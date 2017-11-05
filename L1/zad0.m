@@ -1,0 +1,11 @@
+a = 1:100;
+b = 1:2:99;
+c = -pi:0.01*pi:pi;
+d = [c(1:100), c(102:201)];
+e = arrayfun(@(x) sin(x) * (sin(x)>0), a);
+A = reshape(a, [10, 10]).';
+B = diag(1:100) + diag(99:-1:1, 1) + diag(99:-1:1, -1);
+C = triu(ones(10, 10));
+D = [arrayfun(@(x) x*(x+1)/2, 1:100);arrayfun(@(x) factorial(x), 1:100)];
+E_ = repmat(1:100, 100, 1);
+E = arrayfun(@(x) x == 0, mod(E_, E_.'));
