@@ -10,6 +10,11 @@ class KMeans:
         self._data_length = None
         self._data_dimension = None
 
+    def _get_nth_group(self, data, partition=None, *, n):
+        if partition is None:
+            partition = self.groups
+        return data[partition==n, :]
+
     def random_centers(self, data):
         random_without_repetition = np.random.choice(np.arange(self._data_length),
                                                      size=self.k,
@@ -21,10 +26,16 @@ class KMeans:
         distances_from_centers += np.sum(group_centers ** 2, axis=1, keepdims=True).T
         return np.argmin(distances_from_centers, axis=1)
 
+    def euclidean_distance(self, data, vector):
+        data -= vector
+        data = data ** 2
+        length = np.sqrt(np.sum(data, axis=1, keepdims=True))
+        return length
+
     def centroids(self, data, partition):
         group_centers = np.zeros([self.k, self._data_dimension])
         for i in range(self.k):
-            group = data[partition==i, :]
+            group = self._get_nth_group(data, partition, n=i)
             group_centers[i] = np.sum(group, axis=0, keepdims=True) / group.shape[0]
         return group_centers
 
@@ -47,6 +58,26 @@ class KMeans:
         self.groups = partition
         return self
 
+    def average_distances_to_center(self, data):
+        average_distances = np.zeros(self.k)
+        if self.group_centers is None and data is not None:
+            self.fit(data)
+        for group_idx, center in enumerate(self.group_centers):
+            group = self._get_nth_group(data, n=group_idx)
+            distances = self.euclidean_distance(group, center)
+            average_distances[group_idx] = np.average(distances)
+        return average_distances
+
+    def center_to_center_average_distance(self):
+        if self.group_centers is None:
+            raise Exception("Run KMeans::fit(data) first")
+        average_distances = np.zeros(self.k)
+        for group_idx, center in enumerate(self.group_centers):
+            distances = self.euclidean_distance(self.group_centers, center)
+            average_distances[group_idx] = np.sum(distances) / (self.k - 1)
+        return average_distances
+
+
 
 if __name__ == "__main__":
     from matplotlib import pyplot
@@ -61,3 +92,5 @@ if __name__ == "__main__":
     pyplot.scatter(data_partition.group_centers[:, 0],
                    data_partition.group_centers[:, 1], c="black")
     pyplot.show()
+    print(data_partition.average_distances_to_center(data))
+    print(data_partition.center_to_center_average_distance())
