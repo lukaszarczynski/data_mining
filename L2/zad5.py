@@ -5,7 +5,7 @@ from L2.zad4 import polygon_point_clouds
 
 def vector_length(vectors):
     vectors = vectors.T**2
-    length = np.sqrt(np.dot(np.ones((1, vectors.shape[0])), vectors))
+    length = np.sqrt(np.ones((1, vectors.shape[0])) @ vectors)
     return length
 
 
