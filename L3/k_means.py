@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class KMeans:
     def __init__(self, *, k):
         self.k = k
@@ -20,7 +21,7 @@ class KMeans:
         random_without_repetition = np.random.choice(np.arange(self._data_length),
                                                      size=self.k,
                                                      replace=False)
-        return data[random_without_repetition, :]
+        return data[random_without_repetition, :].astype("float32")
 
     def nearest_neighbors(self, data, group_centers):
         distances_from_centers = -2 * (data @ group_centers.T)
@@ -41,7 +42,7 @@ class KMeans:
                 group_centers[i] = np.random.choice(np.arange(self._data_length), 1)
             else:
                 group_centers[i] = np.sum(group, axis=0, keepdims=True) / group.shape[0]
-        return group_centers
+        return group_centers.astype("float32")
 
     def fit(self, data, *, max_iterations=300):
         self._data_length = data.shape[0]
@@ -79,6 +80,9 @@ class KMeans:
             average_distances[group_idx] = np.sum(distances) / (self.k - 1)
         return average_distances
 
+    def groups_sizes(self):
+        return np.histogram(self.groups, bins=self.k)[0]
+
 
 if __name__ == "__main__":
     from matplotlib import pyplot
@@ -89,7 +93,7 @@ if __name__ == "__main__":
     pyplot.show()
     data_partition = KMeans(k=3)
     for _ in range(10):
-        data_partition.fit(data)
+        data_partition.fit(data, max_iterations=1)
         colormap = "rgb"
         print(data_partition.iterations)
         pyplot.scatter(data[:, 0], data[:, 1], c=[colormap[i] for i in data_partition.groups])
@@ -98,3 +102,5 @@ if __name__ == "__main__":
         pyplot.show()
     print(data_partition.average_distances_to_center(data))
     print(data_partition.center_to_center_average_distance())
+    print(data_partition.groups)
+    print(np.histogram(data_partition.groups, bins=data_partition.k)[0])
