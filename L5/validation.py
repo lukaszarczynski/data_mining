@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from sklearn import metrics
 
 
 def test_training_indices(train_size=100, data_size=150):
@@ -39,3 +40,13 @@ def print_scores(classifier, data, labels, tested_variable):
     print(classifier.fit(data, labels).score(data, labels))
     score = cross_validation(data, labels, classifier)
     print(score, np.mean(score), "\n", sep="\n")
+
+
+def confusion_matrix(classifier, data, targets):
+    training_indices, test_indices = test_training_indices(
+        data_size=len(targets),
+        train_size=len(targets) // 3)
+    classifier.fit(data[training_indices],
+                   targets[training_indices])
+    predicted_labels = classifier.predict(data[test_indices])
+    return metrics.confusion_matrix(targets[test_indices], predicted_labels)
