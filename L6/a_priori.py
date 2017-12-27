@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
-from typing import List
 
+from typing import List
 from collections import defaultdict
 
 
@@ -36,27 +36,9 @@ class APriori:
 
     def _find_single_element_frequent_sets(self):
         all_products = {frozenset({item}) for item in itertools.chain.from_iterable(self.transactions)}
-
+        print(f"Number of candidates of length 1: {len(all_products)}")
         frequent_items = self._filter_support(all_products)
         return frequent_items
-
-        # flat_transactions = list(itertools.chain.from_iterable(self.transactions))
-        # print(f"number of candidates of length 1: {self.transactions_number}")
-        # products_counts = np.bincount(flat_transactions)
-        # print("products counted")
-        # frequent_items = np.where(products_counts / self.transactions_number >= self.min_support)[0]
-        # print("frequent_items created")
-        # existing_items = np.where(products_counts > 0)[0]
-        # print("existing_items created")
-        # support_values = products_counts[existing_items] / self.transactions_number
-        # print("support_values created")
-        # support_keys = [frozenset({i}) for i in flat_transactions]
-        # print("support_keys created")
-        # support_dict = dict(zip(support_keys, support_values))
-        # print("supports_dict created")
-        # self.support.update(support_dict)
-        # print("support updated")
-        # return {frozenset({item}) for item in frequent_items}
 
     def _generate_next_candidate_sets(self, frequent_sets):
         current_sets_length = len(frequent_sets) + 1
