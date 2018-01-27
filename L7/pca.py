@@ -11,7 +11,7 @@ class PCA:
         self.eigenvalues = None
         self._eigenvectors = None
 
-    def fit(self, data):
+    def fit_transform(self, data):
         self.data = data
         self.dimension = data.shape[1]
         data_standardized = PCA.standardize(self.data)
