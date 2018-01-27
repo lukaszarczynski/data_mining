@@ -15,15 +15,15 @@ class FaceRecognition:
         self.predicted_face_ids = None
 
     def fit(self, training_data, *, images_per_person_teaching=5):
-        self.training_data = training_data.T
+        self.training_data = training_data
         self.images_per_person_teaching = images_per_person_teaching
         self.training_targets = np.array(range(self.training_data.shape[0]))
         self.face_id_knn.fit(self.training_data, self.training_targets)
 
     def predict(self, testing_data, *, images_per_person_testing=2):
-        self.testing_data = testing_data.T
+        self.testing_data = testing_data
         self.images_per_person_testing = images_per_person_testing
-        prediction = self.face_id_knn.predict(testing_data.T)
+        prediction = self.face_id_knn.predict(self.testing_data)
         return prediction // self.images_per_person_teaching
 
     @staticmethod
@@ -31,8 +31,8 @@ class FaceRecognition:
         return image_idx // images_per_person
 
     def _prepare_results(self):
-        self.predicted_face_ids = self.face_id_knn.predict(self.testing_data.T)
-        self.euclidean_distances = self.face_id_knn.euclidean_distance(self.training_data, self.testing_data.T)
+        self.predicted_face_ids = self.face_id_knn.predict(self.testing_data)
+        self.euclidean_distances = self.face_id_knn.euclidean_distance(self.training_data, self.testing_data)
 
     def print_results(self, test_data):
         self.testing_data = test_data
@@ -49,7 +49,7 @@ class FaceRecognition:
         self.testing_data = test_data
         testing_targets_faces = np.array(
             [self.images_per_person_testing * [i]
-             for i in range(self.testing_data.shape[1] // self.images_per_person_testing)]).flatten()
+             for i in range(self.testing_data.shape[0] // self.images_per_person_testing)]).flatten()
 
         predicted_labels = self.predict(self.testing_data,
                                         images_per_person_testing=self.images_per_person_testing)
@@ -60,18 +60,19 @@ if __name__ == "__main__":
     import scipy.io
     from sklearn import decomposition
 
-    training_images = scipy.io.loadmat('data/ReducedImagesForTraining.mat')["images"]
-    testing_images = scipy.io.loadmat('data/ReducedImagesForTesting.mat')["images"]
+    training_images = scipy.io.loadmat('data/ReducedImagesForTraining.mat')["images"].T
+    testing_images = scipy.io.loadmat('data/ReducedImagesForTesting.mat')["images"].T
     face_recognition = FaceRecognition()
     face_recognition.fit(training_images)
     predicted_faces = face_recognition.predict(testing_images)
+    print(predicted_faces)
     face_recognition.print_results(testing_images)
     print(face_recognition.score(testing_images))
 
     pca = decomposition.PCA(n_components=37)
-    pca.fit(training_images.T)
-    training_images_pca = pca.transform(training_images.T).T
-    testing_images_pca = pca.transform(testing_images.T).T
+    pca.fit(training_images)
+    training_images_pca = pca.transform(training_images)
+    testing_images_pca = pca.transform(testing_images)
     print(training_images_pca.shape, testing_images_pca.shape)
 
     face_recognition = FaceRecognition()
