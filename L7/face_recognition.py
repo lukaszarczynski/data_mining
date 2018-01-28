@@ -3,7 +3,7 @@ import numpy as np
 from L5.knn import KNN
 
 
-class FaceRecognition:
+class FaceRecognition():
     def __init__(self, k_neighbours=1):
         self.training_data = None
         self.images_per_person_teaching = 5
@@ -14,11 +14,12 @@ class FaceRecognition:
         self.images_per_person_testing = 2
         self.predicted_face_ids = None
 
-    def fit(self, training_data, *, images_per_person_teaching=5):
+    def fit(self, training_data, labels=None, *, images_per_person_teaching=5):
         self.training_data = training_data
         self.images_per_person_teaching = images_per_person_teaching
         self.training_targets = np.array(range(self.training_data.shape[0]))
         self.face_id_knn.fit(self.training_data, self.training_targets)
+        return self
 
     def predict(self, testing_data, *, images_per_person_testing=2):
         self.testing_data = testing_data
@@ -45,20 +46,27 @@ class FaceRecognition:
                   FaceRecognition.person_id(predicted_face_id) == FaceRecognition.person_id(i, images_per_person=2), i,
                   sep="\t")
 
-    def score(self, test_data):
+    def score(self, test_data, labels=None):
         self.testing_data = test_data
-        testing_targets_faces = np.array(
-            [self.images_per_person_testing * [i]
-             for i in range(self.testing_data.shape[0] // self.images_per_person_testing)]).flatten()
+        if labels is None:
+            testing_targets_faces = np.array(
+                [self.images_per_person_testing * [i]
+                 for i in range(self.testing_data.shape[0] // self.images_per_person_testing)]).flatten()
+        else:
+            testing_targets_faces = labels
 
         predicted_labels = self.predict(self.testing_data,
                                         images_per_person_testing=self.images_per_person_testing)
-        return sum(testing_targets_faces == predicted_labels) / len(testing_targets_faces)
+        if (testing_targets_faces == predicted_labels) is False:
+            return 0
+        else:
+            return sum(testing_targets_faces == predicted_labels) / len(testing_targets_faces)
 
 
 if __name__ == "__main__":
     import scipy.io
     from sklearn import decomposition
+    from L7.validation import cross_validation
 
     training_images = scipy.io.loadmat('data/ReducedImagesForTraining.mat')["images"].T
     testing_images = scipy.io.loadmat('data/ReducedImagesForTesting.mat')["images"].T
@@ -78,3 +86,17 @@ if __name__ == "__main__":
     face_recognition = FaceRecognition()
     face_recognition.fit(training_images_pca)
     print(face_recognition.score(testing_images_pca))
+
+    training_targets = np.array([i // 5 for i in range(250)])
+    test_targets = np.array([i // 2 for i in range(100)])
+    print(cross_validation(training_images, training_targets, FaceRecognition, {}))
+    print(cross_validation(testing_images, test_targets, FaceRecognition, {}))
+
+    face_recognition = FaceRecognition(k_neighbours=3)
+    face_recognition.fit(training_images)
+    print(face_recognition.score(testing_images))
+    print(cross_validation(testing_images, test_targets, FaceRecognition, {}, total_steps=2))
+
+    face_recognition = FaceRecognition(k_neighbours=10)
+    face_recognition.fit(training_images)
+    print(face_recognition.score(testing_images))
